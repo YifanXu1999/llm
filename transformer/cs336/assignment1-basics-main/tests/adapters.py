@@ -8,7 +8,7 @@ import numpy.typing as npt
 import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
-
+import regex as re
 
 def run_linear(
     d_in: int,
@@ -589,4 +589,65 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    raise NotImplementedError
+    vocab = dict()
+
+    "Init vocab with special tokens and 256 bytes"
+    next_token_id = 0
+    for special_token in special_tokens:
+        vocab[next_token_id] = special_token.encode("utf-8")
+        next_token_id += 1
+    for i in range(256):
+        vocab[next_token_id] = bytes([i])
+        next_token_id += 1
+    "Read the input file"
+    text = ''
+    with open(input_path, "r", encoding="utf-8") as f:
+        text = f.read()
+    
+    "Split on special tokens"
+    special_tokens_pattern  = f'{"|".join(special_tokens)}'
+    parts = re.split(special_tokens_pattern, text)
+    from collections import defaultdict
+    "Split parts based on the PAT and count the number of words"
+    word_counts = defaultdict(int)
+    for part in parts:
+        PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+        words = re.findall(PAT, part)
+        for word in words:
+            word =  tuple(bytes([b]) for b in word.encode("utf-8"))
+            word_counts[word] += 1
+    
+
+
+
+    num_merges = vocab_size  - len(vocab)
+    print(f'Start merges with {num_merges} merges')
+    merges = []
+    for i in range(num_merges):
+        def get_pair_counts(word_counts):
+            pairs = defaultdict(int)
+            for word, count in word_counts.items():
+                for i in range(len(word) - 1):
+                    pairs[word[i], word[i + 1]] += count
+            return pairs
+        pair_counts = get_pair_counts(word_counts)
+        # max_pair = max(pair_counts.items(), key=lambda x: x[1])[0]
+        max_pair = max(pair_counts.items(), key=lambda x: (x[1], x[0]))[0]
+        merges.append(max_pair)
+        new_word_counts = dict()
+        for word in word_counts:
+            new_word = []
+            word_ind = 0
+            while word_ind < len(word):
+                if word_ind+1 < len(word) and word[word_ind] == max_pair[0] and word[word_ind+1] == max_pair[1]:
+                    new_word.append(max_pair[0] + max_pair[1])
+                    word_ind += 2
+                else:
+                    new_word.append(word[word_ind])
+                    word_ind += 1
+      
+            new_word_counts[tuple(new_word)] = word_counts[word]
+        word_counts = new_word_counts
+        vocab[next_token_id] = max_pair[0] + max_pair[1]
+        next_token_id += 1
+    return vocab, merges
