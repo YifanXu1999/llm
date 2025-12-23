@@ -58,8 +58,8 @@ if __name__ == '__main__':
         llmClient = HelloAgentsLLM()
         
         exampleMessages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "write a greeting message"}
+            {"role": "system", "content": "You are a helpful assistant ."},
+            {"role": "user", "content": "查询福州今天天气"}
         ]
         
         print("--- 调用LLM ---")
