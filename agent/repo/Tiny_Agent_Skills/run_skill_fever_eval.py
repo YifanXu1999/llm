@@ -34,6 +34,8 @@ def print_steps(steps):
         print("SubskillOutput:", step.get("subskill_output", ""))
         if step.get("tool_call"):
             print("ToolCall:", step.get("tool_call"))
+            tool_args = step["tool_call"].get("arguments", {})
+            print("ToolParameters:", tool_args)
         if step.get("tool_result") is not None:
             print("ToolResult:", step.get("tool_result"))
         if step.get("tool_error"):

@@ -27,12 +27,10 @@ Observation: [result from action]
 - **lookup[string]**: Returns next sentence containing the string
 - **finish[answer]**: Must be SUPPORTS, REFUTES, or NOT ENOUGH INFO
 
-## Key Principles for Small Models
+## Key Principles
 - One action per turn
 - Keep thoughts concise (1-2 sentences)
 - Focus on claim keywords
-- Maximum 5-7 steps per verification
-- Stop early if answer is clear
 
 ## Selection Logic
 ```
@@ -63,8 +61,3 @@ Thought: Claim matches observation exactly.
 Action: finish[SUPPORTS]
 ```
 
-## Efficiency Tips
-- Search most specific entity first
-- Use lookup for precise fact-finding
-- Finish as soon as answer is clear
-- If entity not found after 2 attempts, consider NOT ENOUGH INFO
